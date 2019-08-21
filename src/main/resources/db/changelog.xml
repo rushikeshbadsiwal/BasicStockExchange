@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+    <changeSet id="create_user_table" author="rushikeshbadsiwal">
+        <sql>
+            CREATE TABLE user(
+            userUUID varchar(64) NOT NULL,
+            name varchar(64),
+            walletBalance int,
+            PRIMARY KEY(userUUID)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="create_stockdetail_table" author="rushikeshbadsiwal">
+        <sql>
+            CREATE TABLE stockdetail(
+            symbol varchar(64) NOT NULL,
+            count int,
+            price int,
+            PRIMARY KEY(symbol)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="create_record_table" author="rushikeshbadsiwal">
+        <sql>
+            CREATE TABLE record(
+            eventID varchar(64) NOT NULL,
+            userID varchar(64),
+            symbol varchar(64),
+            status varchar(64),
+            type varchar(64)
+            amount int,
+            PRIMARY KEY(eventID)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="create_userstockdetail_table" author="rushikeshbadsiwal">
+        <sql>
+            CREATE TABLE userstockdetail(
+            userUUID varchar(64) NOT NULL,
+            symbol varchar(64) NOT NULL,
+            count int,
+            PRIMARY KEY(userUUID, symbol)
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>
+

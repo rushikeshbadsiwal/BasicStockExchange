@@ -34,7 +34,7 @@
             userID varchar(64),
             symbol varchar(64),
             status varchar(64),
-            type varchar(64)
+            type varchar(64),
             amount int,
             PRIMARY KEY(eventID)
             );

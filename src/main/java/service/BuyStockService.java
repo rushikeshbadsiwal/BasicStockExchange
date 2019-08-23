@@ -2,13 +2,13 @@ package service;
 
 import dao.RecordDao;
 import dao.StockDao;
+import exceptions.InsufficientStock;
 import model.BuyStockRequest;
 import model.StockDetail;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 @Singleton
@@ -17,26 +17,27 @@ public class BuyStockService implements Service {
     private final StockDao stockDao;
     private final UserService userService;
     private final RecordDao recordDao;
-    private final List<ExecutorService> executors;
+    private final ExecutorService executorService;
     private final TransactionTemplate transactionTemplate;
 
     @Inject
-    public BuyStockService(StockDao stockDao, UserService userService, RecordDao recordDao, List<ExecutorService> executors, TransactionTemplate transactionTemplate) {
+    public BuyStockService(StockDao stockDao, UserService userService, RecordDao recordDao, ExecutorService executorService, TransactionTemplate transactionTemplate) {
         this.stockDao = stockDao;
         this.userService = userService;
         this.recordDao = recordDao;
-        this.executors = executors;
+        this.executorService = executorService;
         this.transactionTemplate = transactionTemplate;
     }
 
     public void buyStock(BuyStockRequest buyStockRequest) {
-        executors.get(buyStockRequest.getSymbol().hashCode()).execute(() -> {
+        executorService.execute(() -> {
             transactionTemplate.execute(transactionStatus -> {
-                StockDetail stock = stockDao.getStock(buyStockRequest.getSymbol());
-                if(stock.getCount()< buyStockRequest.getAmount()){
-                    throw null;
+                userService.makeTransaction(buyStockRequest.getUserID(), buyStockRequest.getAmount(), buyStockRequest.getSymbol());
+                StockDetail stockDetail =  stockDao.getStockForUpdate(buyStockRequest.getSymbol());
+                if(stockDetail.getCount() < buyStockRequest.getAmount()){
+                    throw new InsufficientStock("less stock");
                 }
-                userService.makeTransaction(buyStockRequest.getUserID(), buyStockRequest.getAmount());
+                stockDetail.setCount(stockDetail.getCount() - buyStockRequest.getAmount());
                 return 1;
             });
         });

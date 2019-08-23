@@ -28,6 +28,7 @@ public class DispatcherServlet extends HttpServlet {
             HttpServletResponse response)
             throws IOException {
         final long startTime = System.currentTimeMillis();
+        System.out.println("path is " + request.getPathInfo());
         response.setContentType("text/plain");
         response.setStatus(HttpServletResponse.SC_OK);
         try {

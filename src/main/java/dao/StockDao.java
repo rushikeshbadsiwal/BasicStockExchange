@@ -23,6 +23,7 @@ public class StockDao {
     private final NamedParameterJdbcTemplate template;
     private static final String ADD_STOCK_QUERY = "insert into Stockdetail (symbol, count, price) values (:symbol, :count, :price)";
     private static final String GET_STOCK_QUERY = "select * from Stockdetail where symbol=:symbol";
+    private static final String GET_STOCKFORUPDATE_QUERY = "select * from Stockdetail where symbol=:symbol FOR UPDATE";
     private static final String GET_ALL_STOCK_QUERY = "select * from Stockdetail";
     private static final String UPDATE_STOCK_QUERY="update stockdetail set count=:count,price=:price where symbol=:symbol";
 
@@ -57,6 +58,11 @@ public class StockDao {
     public StockDetail getStock(String symbol) {
         SqlParameterSource namedParameters = new MapSqlParameterSource("symbol", symbol);
         return template.queryForObject(GET_STOCK_QUERY, namedParameters, new StockRowMapper());
+    }
+
+    public StockDetail getStockForUpdate(String symbol) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource("symbol", symbol);
+        return template.queryForObject(GET_STOCKFORUPDATE_QUERY, namedParameters, new StockRowMapper());
     }
 
     public String updateStock(StockDetail stockDetail) {

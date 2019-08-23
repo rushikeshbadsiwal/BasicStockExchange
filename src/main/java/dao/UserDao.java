@@ -24,6 +24,7 @@ public class UserDao {
     private static final String GET_USER_QUERY = "select * from User where userUUID=:userUUID";
     private static final String GET_ALL_USERS_QUERY = "select * from User";
     private static final String UPDATE_USER_QUERY="update stockdetail set name=:name,walletBalance=:walletBalance where userUUID=:userUUID";
+    private static final String GET_USER_FORUPDATE_QUERY = "select * from User where userUUID=:userUUID FOR UPDATE";
 
     private static final String ADD_USERSTOCKDETAIL_QUERY = "insert into user (userUUID, symbol, count) values (:userUUID, :symbol, :count)";
     private static final String GET_USERSTOCKDETAIL_QUERY = "select * from userstockdetail where userUUID=:userUUID AND symbol=:symbol";
@@ -86,10 +87,15 @@ public class UserDao {
         return template.queryForObject(GET_USER_QUERY, namedParameters, new UserRowMapper());
     }
 
-    public User getUserStockDetail(String userUUID, String symbol) {
+    public User getUserForUpdate(String userUUID) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource("userUUID", userUUID);
+        return template.queryForObject(GET_USER_FORUPDATE_QUERY, namedParameters, new UserRowMapper());
+    }
+
+    public UserStockDetail getUserStockDetail(String userUUID, String symbol) {
         SqlParameterSource namedParameters = new MapSqlParameterSource("userUUID", userUUID)
                 .addValue("symbol", symbol);
-        return template.queryForObject(GET_USERSTOCKDETAIL_QUERY, namedParameters, new UserRowMapper());
+        return template.queryForObject(GET_USERSTOCKDETAIL_QUERY, namedParameters, new UserStockDetailRowMapper());
     }
 
     public String updateUser(User user) {

@@ -1,6 +1,7 @@
 package Server;
 
 import Servlet.DispatcherServlet;
+import com.google.inject.name.Named;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -19,17 +20,19 @@ public class JettyServer {
     private Server server;
     private ServerConnector serverConnector;
     private DispatcherServlet dispatcherServlet;
+    private final String PORT_NUMBER;
 
     @Inject
-    public JettyServer(ServletHandler servletHandler, QueuedThreadPool threadPool, DispatcherServlet dispatcherServlet) {
+    public JettyServer(ServletHandler servletHandler, QueuedThreadPool threadPool, DispatcherServlet dispatcherServlet, @Named("port.number")String port_number) {
         this.servletHandler = servletHandler;
         server = new Server(threadPool);
+        PORT_NUMBER = port_number;
         serverConnector = new ServerConnector(server);
         this.dispatcherServlet = dispatcherServlet;
     }
 
     public void start() throws Exception {
-        serverConnector.setPort(8090);
+        serverConnector.setPort(Integer.parseInt(PORT_NUMBER));
         server.setConnectors(new Connector[]{serverConnector});
         servletHandler.addServletWithMapping(new ServletHolder(dispatcherServlet), "/*");
         server.setHandler(servletHandler);

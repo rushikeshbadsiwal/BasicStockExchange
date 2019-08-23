@@ -5,6 +5,15 @@ public class UserStockDetail {
     private String symbol;
     private int count;
 
+    public UserStockDetail(String userUUID, String symbol, int count) {
+        this.userUUID = userUUID;
+        this.symbol = symbol;
+        this.count = count;
+    }
+
+    public UserStockDetail() {
+    }
+
     public String getUserUUID() {
         return userUUID;
     }

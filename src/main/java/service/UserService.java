@@ -46,24 +46,21 @@ public class UserService implements Service {
     }
 
     public void makeTransaction(String userUUID, int payment, String symbol) {
-        executorService.submit(() -> {
-            transactionTemplate.execute(transactionStatus -> {
-                User user = getUserForUpdate(userUUID);
-                if (user.getWalletBalance() < payment && payment > 0) {
-                    throw new LowBalanceException("low balance");
-                }
-                user.setWalletBalance(user.getWalletBalance() - payment);
-                updateUser(user);
-                UserStockDetail userStockDetail = userDao.getUserStockDetail(userUUID,symbol);
-                if(userStockDetail == null){
-                    userDao.addUserStockDetail(new UserStockDetail(userUUID,symbol,payment));
-                }
-                else{
-                    userStockDetail.setCount(userStockDetail.getCount() + payment);
-                    userDao.updateUserStockDetail(userStockDetail);
-                }
-                return 1;
-            });
+        transactionTemplate.execute(transactionStatus -> {
+            User user = getUserForUpdate(userUUID);
+            if (user.getWalletBalance() < payment && payment > 0) {
+                throw new LowBalanceException("low balance");
+            }
+            user.setWalletBalance(user.getWalletBalance() - payment);
+            updateUser(user);
+            UserStockDetail userStockDetail = userDao.getUserStockDetail(userUUID, symbol);
+            if (userStockDetail == null) {
+                userDao.addUserStockDetail(new UserStockDetail(userUUID, symbol, payment));
+            } else {
+                userStockDetail.setCount(userStockDetail.getCount() + payment);
+                userDao.updateUserStockDetail(userStockDetail);
+            }
+            return 1;
         });
     }
 

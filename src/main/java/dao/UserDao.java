@@ -3,6 +3,7 @@ package dao;
 import model.User;
 import model.UserStockDetail;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -23,13 +24,13 @@ public class UserDao {
     private static final String ADD_USER_QUERY = "insert into user (userUUID, name, walletBalance) values (:userUUID, :name, :walletBalance)";
     private static final String GET_USER_QUERY = "select * from User where userUUID=:userUUID";
     private static final String GET_ALL_USERS_QUERY = "select * from User";
-    private static final String UPDATE_USER_QUERY="update stockdetail set name=:name,walletBalance=:walletBalance where userUUID=:userUUID";
+    private static final String UPDATE_USER_QUERY="update user set name=:name,walletBalance=:walletBalance where userUUID=:userUUID";
     private static final String GET_USER_FORUPDATE_QUERY = "select * from User where userUUID=:userUUID FOR UPDATE";
 
-    private static final String ADD_USERSTOCKDETAIL_QUERY = "insert into user (userUUID, symbol, count) values (:userUUID, :symbol, :count)";
+    private static final String ADD_USERSTOCKDETAIL_QUERY = "insert into userstockdetail (userUUID, symbol, count) values (:userUUID, :symbol, :count)";
     private static final String GET_USERSTOCKDETAIL_QUERY = "select * from userstockdetail where userUUID=:userUUID AND symbol=:symbol";
     private static final String GET_ALL_USERSSTOCKDETAIL_QUERY = "select * from userstockdetail";
-    private static final String UPDATE_USERSTOCKDETAIL_QUERY="update stockdetail set count=:count where symbol=:symbol AND userUUID=:userUUID";
+    private static final String UPDATE_USERSTOCKDETAIL_QUERY="update userstockdetail set count=:count where symbol=:symbol AND userUUID=:userUUID";
 
     @Inject
     public UserDao(BasicDataSource basicDataSource) {
@@ -95,7 +96,12 @@ public class UserDao {
     public UserStockDetail getUserStockDetail(String userUUID, String symbol) {
         SqlParameterSource namedParameters = new MapSqlParameterSource("userUUID", userUUID)
                 .addValue("symbol", symbol);
-        return template.queryForObject(GET_USERSTOCKDETAIL_QUERY, namedParameters, new UserStockDetailRowMapper());
+        try {
+            return template.queryForObject(GET_USERSTOCKDETAIL_QUERY, namedParameters, new UserStockDetailRowMapper());
+        }
+        catch (EmptyResultDataAccessException e){
+            return null;
+        }
     }
 
     public String updateUser(User user) {

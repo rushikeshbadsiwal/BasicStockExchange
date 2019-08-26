@@ -89,6 +89,7 @@ public class DispatcherServlet extends HttpServlet {
 
     private void doPostRedirect(HttpServletRequest request) throws IOException, InvocationTargetException, IllegalAccessException {
         ApiMapObject apiMapObject = processorMap.get(request.getPathInfo());
+        System.out.println(apiMapObject.getMethod()+" "+apiMapObject.getService());
         apiMapObject.getMethod().invoke(apiMapObject.getService(), request.getReader());
     }
 }

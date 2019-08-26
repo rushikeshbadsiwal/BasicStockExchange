@@ -11,7 +11,7 @@ import javax.inject.Singleton;
 import java.io.BufferedReader;
 
 @Singleton
-@PrefixPath(path = "/buystock/")
+@PrefixPath(path = "/buystock")
 public class BuyStockController implements Controller{
 
     private final BuyStockService buyStockService;
@@ -21,7 +21,7 @@ public class BuyStockController implements Controller{
         this.buyStockService = buyStockService;
     }
 
-    @Path(path = "/buystock/", type = "POST")
+    @Path(path = "/buystock", type = "POST")
     public void buyStock(BufferedReader requestBody){
         buyStockService.buyStock(getBuyStockRequest(requestBody));
     }

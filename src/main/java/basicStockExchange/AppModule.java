@@ -5,6 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+import controller.BuyStockController;
 import controller.Controller;
 import controller.StockController;
 import controller.UserController;
@@ -16,6 +17,8 @@ import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.reflections.Reflections;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -62,6 +65,12 @@ public class AppModule extends AbstractModule {
         }
     }
 
+    @Singleton
+    @Provides
+    public TransactionTemplate getJDBCTransactionTemplate(BasicDataSource basicDataSource) {
+        return new TransactionTemplate(new DataSourceTransactionManager(basicDataSource));
+    }
+
     @Provides
     ServletHandler getServletHandler() {
         return new ServletHandler();
@@ -88,11 +97,13 @@ public class AppModule extends AbstractModule {
 
     @Provides
     Map<String, ApiMapObject> getPathToClassMapping(final StockController stockController,
-                                                    final UserController userController) {
+                                                    final UserController userController,
+                                                    final BuyStockController buyStockController) {
         Map<Class, Controller> map = new HashMap<>();
         Map<String, ApiMapObject> processorMap = new HashMap<>();
         map.put(stockController.getClass(), stockController);
         map.put(userController.getClass(), userController);
+        map.put(buyStockController.getClass(), buyStockController);
 
         Reflections reflections = new Reflections("");
         for (Class controller : reflections.getSubTypesOf(Controller.class)) {

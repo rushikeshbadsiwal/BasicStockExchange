@@ -44,6 +44,7 @@ public class UserController implements Controller {
         return userService.deleteUser(getUUID(requestBody).userUUID);
     }
 
+    @Path(path = "/user/updateuser",type = "POST")
     public String updateUser(BufferedReader requestBody) {
         return userService.updateUser(getUserFromRequestBody(requestBody));
     }

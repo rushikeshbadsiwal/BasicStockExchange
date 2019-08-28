@@ -10,6 +10,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import static java.lang.Thread.currentThread;
+import static java.lang.Thread.sleep;
+
 @Singleton
 public class BuyStockService implements Service {
 
@@ -27,12 +30,19 @@ public class BuyStockService implements Service {
     }
 
     public void buyStock(BuyStockRequest buyStockRequest) {
-        System.out.println("this is "+transactionTemplate);
+        System.out.println("this is " + transactionTemplate);
         transactionTemplate.execute(transactionStatus -> {
+            System.out.println("inside template" + currentThread().getName());
             userService.makeTransaction(buyStockRequest.getUserID(), buyStockRequest.getAmount(), buyStockRequest.getSymbol());
             StockDetail stockDetail = stockDao.getStockForUpdate(buyStockRequest.getSymbol());
             if (stockDetail.getCount() < buyStockRequest.getAmount()) {
                 throw new InsufficientStock("less stock");
+            }
+            System.out.println("stockAmonut " + stockDetail.getCount());
+            try {
+                sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
             stockDetail.setCount(stockDetail.getCount() - buyStockRequest.getAmount());
             stockDao.updateStock(stockDetail);

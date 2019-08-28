@@ -51,5 +51,45 @@
             );
         </sql>
     </changeSet>
+
+    <changeSet id="create_listed_stock_table" author="rushikeshbadsiwal">
+        <sql>
+            CREATE TABLE listedstock(
+            symbol varchar(64) NOT NULL,
+            name varchar(64),
+            PRIMARY KEY(symbol)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="add_amazon_stock" author="rushikeshbadsiwal">
+        <sql>
+            insert into listedstock value( "AMZN", "Amazon");
+        </sql>
+    </changeSet>
+
+    <changeSet id="add_microsoft_stock" author="rushikeshbadsiwal">
+        <sql>
+            insert into listedstock value( "MSFT", "Microsoft");
+        </sql>
+    </changeSet>
+
+    <changeSet id="add_market_stock" author="rushikeshbadsiwal">
+        <sql>
+            insert into listedstock value( "AAPL", "Apple");
+        </sql>
+
+        <sql>
+            insert into listedstock value( "MA", "Mastercard");
+        </sql>
+
+        <sql>
+            insert into listedstock value( "FB", "Facebook");
+        </sql>
+
+        <sql>
+            insert into listedstock value( "GOOGL", "Alphabet");
+        </sql>
+    </changeSet>
 </databaseChangeLog>
 

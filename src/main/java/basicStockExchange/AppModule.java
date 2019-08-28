@@ -13,6 +13,8 @@ import model.ApiMapObject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -82,6 +84,11 @@ public class AppModule extends AbstractModule {
         int minThreads = 10;
         int idleTimeout = 100;
         return new QueuedThreadPool(maxThreads, minThreads, idleTimeout);
+    }
+
+    @Provides
+    HttpClient getHttpClient(){
+        return HttpClientBuilder.create().build();
     }
 
     @Provides

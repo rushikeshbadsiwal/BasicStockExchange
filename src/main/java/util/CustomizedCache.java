@@ -59,8 +59,8 @@ public class CustomizedCache<T, R> {
 //            segments.get(getSegmentMapping(key)).map.put(key, new ValueLoadTime<>((R)fetcherMethod.invoke(fetcherClassObject, key), currentTime));
             segments.get(getSegmentMapping(key)).map.put(key, new ValueLoadTime<>(function.apply(key), currentTime));
             insertIntoQueue(key, currentTime);
+            return segments.get(getSegmentMapping(key)).map.get(key).value;
         }
-        return null;
     }
 
     //will remove the least recent used element

@@ -6,9 +6,18 @@ import java.util.concurrent.TimeUnit;
 
 public class Cron {
 
-    private static final ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+    private final long period;
+    private final TimeUnit unit;
+    private final Runnable task;
 
-    public static void schedule(long period, TimeUnit unit, Runnable task) {
+    public Cron(long period, TimeUnit unit, Runnable task) {
+        this.period = period;
+        this.unit = unit;
+        this.task = task;
+    }
+
+    public void start(){
         ses.scheduleAtFixedRate(safelyRun(task), 0, period, unit);
     }
 

@@ -6,33 +6,63 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 public class CacheSegment<T, R> {
-    Map<T, ValueLoadTime<R>> map= new HashMap<>();
+    Map<T, ValueLoadTime<R>> map = new HashMap<>();
     Queue<KeyLoadTime<T>> queue = new LinkedList<>();
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private long refreshTimeMillis;
+    private Function<T, R> function;
+    private final int size;
 
-    public Map<T, ValueLoadTime<R>> getMap() {
-        return map;
+    public CacheSegment(long refreshTimeMillis, Function<T, R> function, int size) {
+        this.refreshTimeMillis = refreshTimeMillis;
+        this.function = function;
+        this.size = size;
     }
 
-    public void setMap(Map<T, ValueLoadTime<R>> map) {
-        this.map = map;
+    public R getValue(T key) {
+        if (isValueValid(key)) {
+            return map.get(key).value;
+        }
+        return getValueFromDataSource(key);
     }
 
-    public Queue<KeyLoadTime<T>> getQueue() {
-        return queue;
+    private synchronized R getValueFromDataSource(T key) {
+        if (isValueValid(key)) {
+            return map.get(key).value;
+        }
+        if (map.get(key) != null) {
+            map.remove(key);
+            removeElementFromQueue(key);
+        }
+        if (map.size() >= size) {
+            freeUpSpace();
+        }
+        Long currentTime = System.currentTimeMillis();
+        R r = function.apply(key);
+        map.put(key, new ValueLoadTime<>(r, currentTime));
+        insertIntoQueue(key, currentTime);
+        return r;
     }
 
-    public void setQueue(Queue<KeyLoadTime<T>> queue) {
-        this.queue = queue;
+    private void removeElementFromQueue(T key) {
+
     }
 
-    public ExecutorService getExecutorService() {
-        return executorService;
+    private void freeUpSpace() {
+
     }
 
-    public void setExecutorService(ExecutorService executorService) {
-        this.executorService = executorService;
+    private void insertIntoQueue(T key, Long currentTime) {
+
     }
+
+
+    private boolean isValueValid(T key) {
+        if (map.containsKey(key))
+            return false;
+        return (System.currentTimeMillis() - map.get(key).timeInMillis) < (refreshTimeMillis);
+    }
+
 }

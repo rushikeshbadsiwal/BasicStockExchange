@@ -1,8 +1,10 @@
 package util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 
 public class CustomizedCache<T, R> {
@@ -12,9 +14,8 @@ public class CustomizedCache<T, R> {
     private Method fetcherMethod;
     private Object fetcherClassObject;
     private CacheType cacheType = CacheType.WRITECACHE;
-    private List<Map<T, Pair<R, Long>>> maps = new ArrayList<>();
-    private List<Queue<Pair<T, Long>>> queues = new ArrayList<>();
-    private List<ExecutorService> executorServices = new ArrayList<>();
+    private ArrayList<CacheSegment<T, R>> segments;
+    private Function<T,R> function;
 
     public CustomizedCache(int maxSize, int refreshTime, CacheType cacheType, int numberOfSegments, Method fetcherMethod, Object fetcherClassObject) {
         this.maxSize = maxSize;
@@ -23,57 +24,71 @@ public class CustomizedCache<T, R> {
         this.fetcherMethod = fetcherMethod;
         this.fetcherClassObject = fetcherClassObject;
         this.cacheType = cacheType;
-        initCustomizedCache();
+        segments = new ArrayList<>(numberOfSegments);
     }
 
-    private void initCustomizedCache() {
-        for (int i = 0; i < numberOfSegments; i++) {
-            maps.add(new HashMap<>());
-            queues.add(new LinkedList<>());
-            executorServices.add(Executors.newSingleThreadExecutor());
-        }
+    public CustomizedCache(int maxSize, int refreshTime, CacheType cacheType, int numberOfSegments, Function<T,R> function) {
+        this.maxSize = maxSize;
+        this.refreshTime = refreshTime;
+        this.numberOfSegments = numberOfSegments;
+        this.function = function;
+        this.cacheType = cacheType;
+        segments = new ArrayList<>(numberOfSegments);
     }
 
-    public R getValue(T key) throws ExecutionException, InterruptedException {
-        if (maps.get(key.hashCode()).get(key) != null && isValueInValidated(maps.get(key.hashCode()).get(key).second)) {
-            maps.get(key.hashCode()).remove(key);
+    public R getValue(T key) throws InvocationTargetException, IllegalAccessException {
+        if(isValueValid(key)){
+            return segments.get(getSegmentMapping(key)).map.get(key).value;
         }
+        return getValueFromDataSource(key);
+    }
 
-        if (maps.get(key.hashCode()).get(key) != null) {
-            return maps.get(key.hashCode()).get(key).first;
-        }
-
-        Future<?> future = executorServices.get(key.hashCode()).submit(() -> {
-
-            if (maps.get(key.hashCode()).get(key) != null) {
-                return maps.get(key.hashCode()).get(key).first;
+    private R getValueFromDataSource(T key) throws InvocationTargetException, IllegalAccessException {
+        synchronized(segments.get(getSegmentMapping(key))){
+            if(isValueValid(key)){
+                return segments.get(getSegmentMapping(key)).map.get(key).value;
             }
-
-            if(maps.get(key.hashCode()).size() == maxSize){
-                freeUpSpace(key);
+            if(segments.get(getSegmentMapping(key)).map.get(key) != null){
+                segments.get(getSegmentMapping(key)).map.remove(key);
+                removeElementFromQueue(key);
             }
-            return fetcherMethod.invoke(fetcherClassObject, key);
-        });
-        maps.get(key.hashCode()).put(key,new Pair((R)future.get(),System.currentTimeMillis()));
-        return maps.get(key.hashCode()).get(key).first;
-    }
-
-    private void freeUpSpace(T key) {
-        Pair<T, Long> queueTopElement = queues.get(key.hashCode()).peek();
-        while(!queueTopElement.second.equals(maps.get(key.hashCode()).get(queueTopElement.first).second)){
-            queues.get(key.hashCode()).remove();
-            queueTopElement = queues.get(key.hashCode()).peek();
+            if(segments.get(getSegmentMapping(key)).map.size() >= maxSize ){
+                freeUpSpace();
+            }
+            Long currentTime = System.currentTimeMillis();
+//            segments.get(getSegmentMapping(key)).map.put(key, new ValueLoadTime<>((R)fetcherMethod.invoke(fetcherClassObject, key), currentTime));
+            segments.get(getSegmentMapping(key)).map.put(key, new ValueLoadTime<>(function.apply(key), currentTime));
+            insertIntoQueue(key, currentTime);
         }
-        queues.get(key.hashCode()).remove();
-        maps.get(key.hashCode()).remove(queueTopElement.first);
-    }
-
-
-    private boolean isValueInValidated(Long time) {
-        return (System.currentTimeMillis() - time) > (refreshTime);
-    }
-
-    private Pair<R, Long> fetchValue(T key) {
         return null;
+    }
+
+    //will remove the least recent used element
+    private void freeUpSpace() {
+//        Pair<T, Long> queueTopElement = queues.get(key.hashCode()).peek();
+//        while(!queueTopElement.second.equals(maps.get(key.hashCode()).get(queueTopElement.first).second)){
+//            queues.get(key.hashCode()).remove();
+//            queueTopElement = queues.get(key.hashCode()).peek();
+//        }
+//        queues.get(key.hashCode()).remove();
+//        maps.get(key.hashCode()).remove(queueTopElement.first);
+    }
+
+    //will remove given key element from the queue
+    private void removeElementFromQueue(T key){
+
+    }
+    //will insert KeyLoadTime for given key and currentTime into queue
+    private void insertIntoQueue(T key, Long currentTime) {
+    }
+
+    private int getSegmentMapping(T key) {
+        return (key.hashCode() + numberOfSegments) % numberOfSegments;
+    }
+
+    private boolean isValueValid(T key) {
+        if(segments.get(getSegmentMapping(key)).map.get(key) == null)
+            return false;
+        return (System.currentTimeMillis() - segments.get(getSegmentMapping(key)).map.get(key).timeInMillis) < (refreshTime);
     }
 }

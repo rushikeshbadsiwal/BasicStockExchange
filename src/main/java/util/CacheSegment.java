@@ -23,6 +23,7 @@ public class CacheSegment<T, R> {
 
     public R getValue(T key) {
         if (isValueValid(key)) {
+            System.out.println("key in cache" + key + " object is "+ map.get(key).value);
             return map.get(key).value;
         }
         return getValueFromDataSource(key);
@@ -40,6 +41,7 @@ public class CacheSegment<T, R> {
             freeUpSpace();
         }
         Long currentTime = System.currentTimeMillis();
+        System.out.println("key not in cache, fetching from db " + key);
         R r = function.apply(key);
         map.put(key, new ValueLoadTime<>(r, currentTime));
         insertIntoQueue(key, currentTime);
@@ -60,8 +62,9 @@ public class CacheSegment<T, R> {
 
 
     private boolean isValueValid(T key) {
-        if (map.containsKey(key))
+        if (map.get(key) == null) {
             return false;
+        }
         return (System.currentTimeMillis() - map.get(key).timeInMillis) < (refreshTimeMillis);
     }
 

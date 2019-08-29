@@ -32,7 +32,10 @@ public class StockController implements Controller {
 
     @Path(path = "/stock/getstock",type = "GET")
     public StockDetail getStock(BufferedReader requestBody) {
-        return stockService.getStock(getSymbol(requestBody).symbol);
+        StockDetail result = stockService.getStock(getSymbol(requestBody).symbol);
+        System.out.println("stock price is "+result.getSymbol()+ " "+result.getPrice());
+//        return stockService.getStock(getSymbol(requestBody).symbol);
+        return result;
     }
 
     @Path(path = "/stock/addstock",type = "POST")

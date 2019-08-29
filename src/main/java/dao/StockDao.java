@@ -3,6 +3,7 @@ package dao;
 import javassist.compiler.SymbolTable;
 import model.StockDetail;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -25,7 +26,7 @@ public class StockDao {
     private static final String GET_STOCK_QUERY = "select * from Stockdetail where symbol=:symbol";
     private static final String GET_STOCKFORUPDATE_QUERY = "select * from Stockdetail where symbol=:symbol FOR UPDATE";
     private static final String GET_ALL_STOCK_QUERY = "select * from Stockdetail";
-    private static final String UPDATE_STOCK_QUERY="update stockdetail set count=:count,price=:price where symbol=:symbol";
+    private static final String UPDATE_STOCK_QUERY = "update stockdetail set count=:count,price=:price where symbol=:symbol";
 
     @Inject
     public StockDao(BasicDataSource basicDataSource) {
@@ -43,21 +44,25 @@ public class StockDao {
     }
 
     public List<StockDetail> getAllStocks() {
-        return template.query(GET_ALL_STOCK_QUERY,new StockRowMapper());
+        return template.query(GET_ALL_STOCK_QUERY, new StockRowMapper());
     }
 
     public String addStock(StockDetail stockDetail) {
-        Map<String,Object> map=new HashMap<String,Object>();
-        map.put("symbol",stockDetail.getSymbol());
-        map.put("count",stockDetail.getCount());
-        map.put("price",stockDetail.getPrice());
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("symbol", stockDetail.getSymbol());
+        map.put("count", stockDetail.getCount());
+        map.put("price", stockDetail.getPrice());
         template.update(ADD_STOCK_QUERY, map);
         return null;
     }
 
     public StockDetail getStock(String symbol) {
         SqlParameterSource namedParameters = new MapSqlParameterSource("symbol", symbol);
-        return template.queryForObject(GET_STOCK_QUERY, namedParameters, new StockRowMapper());
+        try {
+            return template.queryForObject(GET_STOCK_QUERY, namedParameters, new StockRowMapper());
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
     public StockDetail getStockForUpdate(String symbol) {
@@ -66,11 +71,11 @@ public class StockDao {
     }
 
     public String updateStock(StockDetail stockDetail) {
-        Map<String,Object> map=new HashMap<String,Object>();
-        map.put("symbol",stockDetail.getSymbol());
-        map.put("count",stockDetail.getCount());
-        map.put("price",stockDetail.getPrice());
-        template.update(UPDATE_STOCK_QUERY,map);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("symbol", stockDetail.getSymbol());
+        map.put("count", stockDetail.getCount());
+        map.put("price", stockDetail.getPrice());
+        template.update(UPDATE_STOCK_QUERY, map);
         return null;
     }
 
